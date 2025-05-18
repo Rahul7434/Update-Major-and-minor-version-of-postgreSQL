@@ -153,7 +153,7 @@ Test database and application behavior.
 
 
 
-2. Minor Version Upgrade Steps
+### Minor Version Upgrade Steps
 
 Prepare:
 
@@ -164,13 +164,17 @@ Read the release notes for known issues.
 
 Upgrade:
 
-Install the new version using the package manager. For example:
+stop the PostgreSQL service:
+
+sudo systemctl stop postgresql-16
+
+Install the new version using the package manager.
 
 sudo yum update postgresql16
 
-Restart the PostgreSQL service:
+start the PostgreSQL service:
 
-sudo systemctl restart postgresql-16
+sudo systemctl start postgresql-16
 
 
 Validate:
