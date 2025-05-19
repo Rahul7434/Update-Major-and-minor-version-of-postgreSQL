@@ -3,123 +3,100 @@ In PostgreSQL, major version upgrades and minor version upgrades refer to differ
 
 
 ---
-
-1. Major Version Upgrade
-
-Definition: A major version upgrade involves upgrading to a new PostgreSQL release with new features, enhancements, and changes that may break compatibility with the previous version. For example:
-
-From PostgreSQL 14 to PostgreSQL 15.
-
-
-Impact:
-
-May involve catalog changes, which means the internal database structure may differ.
-
-Application changes may be needed if the new version introduces incompatible behavior.
-
-
-
-Methods for Major Version Upgrade
-
-1. Logical Backup and Restore:
-
-Take a full backup using tools like pg_dump or pg_dumpall.
-
-Install the new version.
-
-Restore the data into the new version.
-
-Best for small-to-medium databases but slower for large databases.
-
-
-
-2. In-place Upgrade Using pg_upgrade:
-
-Faster method for large databases.
-
-Preserves database files while upgrading system catalogs.
-
-Requires both old and new PostgreSQL versions to be installed on the same server.
-
-
-
-
-Prerequisites
-
-Ensure sufficient disk space for backup and temporary files.
-
-Validate compatibility of extensions, plugins, and client applications.
-
-Review release notes for deprecated or removed features.
-
-Take a full backup of the database.
-
-Test the upgrade in a staging environment.
-
-
-Post-requisites
-
-Verify application functionality with the new version.
-
-Update any client drivers or applications if needed.
-
-Remove old PostgreSQL binaries and configuration files after successful migration.
-
-Monitor performance for any unexpected issues.
-
-
-
 ---
 
-2. Minor Version Upgrade
+# Major Version Upgrade
+
+Definition: A major version upgrade involves upgrading to a new PostgreSQL release with new features, enhancements, and changes that may break compatibility with the 
+```
+previous version. For example:
+From PostgreSQL 14 to PostgreSQL 15.
+```
+### Prerequisites
+  - Ensure sufficient disk space for backup and temporary files.
+  - Validate compatibility of extensions, plugins, and client applications.
+  - Review release notes for deprecated or removed features.  
+  - Take a full backup of the database.
+  - Test the upgrade in a staging environment.
+
+### Impact:
+  - May involve catalog changes, which means the internal database structure may differ.
+  - Application changes may be needed if the new version introduces incompatible behavior.
+### Methods for Major Version Upgrade
+```
+--- Logical Backup and Restore ---
+    - Take a full backup using tools like pg_dump or pg_dumpall.
+    [ pg_dump -h hostname -p port -U username -Fp -d dbname -f /path/location/backup.sql ]
+    [ pg_dumpall -h hostname -p port -U username -Fp -f /path/backupfile.sql ]
+
+--- Install the new package from postgresql.org based on Os and pg version then ---
+    [sudo dnf -qy module disable postgresql]
+    [sudo dnf install -y postgresql16-server]
+    [sudo dnf /usr/pgsql-16/bin/postgresql-16-setup initdb ]
+
+--- create pg_upgrade dir for store up_upgrade utility temp files in "/var/lib/pgsql/pg_upgrade_dir" then give permissions for postgres user.
+--- Stop old postgresql server ---
+  [systemctl stop postgresql16]
+
+--- Upgrade version byusing pg_upgrade (faster method) & (Preserves database files while upgrading system catalogs) ---
+  [sudo -U postgres /usr/pgsql-17/bin/pg_upgrade -d /var/lib/pgsql/16/data/ -D /var/lib/pgsql/17/data/ -b /usr/pgsql-16/bin/ -B /usr/pgsql-17/bin/ --link]
+
+--- Check new verison ---
+  [sudo /usr/pgsql-17/bin/postgres --verison] or [select version();]
+
+--- Start new verison of Postgresql ----
+
+```
+### Post-requisites
+  - Verify application functionality with the new version.
+  - Update any client drivers or applications if needed.
+  - Remove old PostgreSQL binaries and configuration files after successful migration.
+  - Monitor performance for any unexpected issues.
+---
+---
+
+## Minor Version Upgrade
 
 Definition: A minor version upgrade updates the database within the same major version to fix bugs, enhance security, and address performance issues. For example:
-
 From PostgreSQL 15.2 to PostgreSQL 15.3.
 
+### Prerequisites:
+  - Take a backup of the database for safety.
+  - Validate the installed extensions for compatibility.
+  - Check release notes for any behavioral changes.
 
-Impact:
+### Impact:
+  - No changes to the internal database structure.
+  - Typically does not require application changes.
+  - Safe and faster compared to major upgrades.
 
-No changes to the internal database structure.
-
-Typically does not require application changes.
-
-Safe and faster compared to major upgrades.
-
-
-
-Method for Minor Version Upgrade
+### Method for Minor Version Upgrade
 
 Binary Replacement:
 
 Stop the database server.
+```
+systemctl stop postgresql-15
+```
 
-Install the new version using the package manager (yum, apt, etc.).
-
-Restart the database server.
-
-This is typically seamless and does not require data dump/restore.
-
-
-
-Prerequisites
-
-Take a backup of the database for safety.
-
-Validate the installed extensions for compatibility.
-
-Check release notes for any behavioral changes.
-
+Update the postgresql
+```
+sudo dnf update -y postgresql*
+```
+start the database server.
+```
+systemctl start postgresql-15
+```
+This is typically seamless and does not require data dump/restore. and we restart the server after the update.
 
 Post-requisites
-
 Verify the server is running the upgraded version using SELECT version();.
-
 Monitor the database logs for any errors or warnings.
 
-
-
 ---
+---
+
+
 
 How to Perform These Upgrades as a DBA
 
